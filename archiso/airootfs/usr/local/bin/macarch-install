@@ -1,5 +1,78 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd /opt/macarch
-./scripts/install-macarch-common.sh
+REPO_URL="https://github.com/Magio1994/MacArch.git"
+TARGET="/mnt"
+
+echo "=== MacArch Online Installer ==="
+loadkeys it 2>/dev/null || true
+lsblk -o NAME,SIZE,TYPE,FSTYPE,MODEL,MOUNTPOINTS
+
+read -rp "Disco da cancellare, es. /dev/sda: " DISK
+read -rp "Hostname [macarch]: " HOSTNAME
+HOSTNAME="${HOSTNAME:-macarch}"
+read -rp "Nome utente [ale]: " USERNAME
+USERNAME="${USERNAME:-ale}"
+
+echo "ATTENZIONE: verrà cancellato completamente $DISK"
+read -rp "Scrivi YES per continuare: " CONFIRM
+[[ "$CONFIRM" == "YES" ]] || exit 1
+
+timedatectl set-ntp true || true
+
+wipefs -af "$DISK"
+sgdisk -Zo "$DISK"
+sgdisk -n 1:0:+1G -t 1:ef00 -c 1:EFI "$DISK"
+sgdisk -n 2:0:0 -t 2:8300 -c 2:ROOT "$DISK"
+partprobe "$DISK"
+sleep 2
+
+EFI="${DISK}1"
+ROOT="${DISK}2"
+
+mkfs.fat -F 32 "$EFI"
+mkfs.ext4 -F "$ROOT"
+
+mount "$ROOT" "$TARGET"
+mount --mkdir "$EFI" "$TARGET/boot"
+
+pacstrap -K "$TARGET" base linux linux-firmware grub efibootmgr networkmanager git sudo nano less
+
+genfstab -U "$TARGET" >> "$TARGET/etc/fstab"
+
+arch-chroot "$TARGET" /bin/bash <<CHROOT
+set -euo pipefail
+
+ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime
+hwclock --systohc
+
+sed -i 's/^#it_IT.UTF-8 UTF-8/it_IT.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+
+echo "LANG=it_IT.UTF-8" > /etc/locale.conf
+echo "KEYMAP=it" > /etc/vconsole.conf
+echo "$HOSTNAME" > /etc/hostname
+
+useradd -m -G wheel -s /bin/bash "$USERNAME"
+
+echo "Imposta password root:"
+passwd
+
+echo "Imposta password utente $USERNAME:"
+passwd "$USERNAME"
+
+sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
+
+systemctl enable NetworkManager
+
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=MacArch
+grub-mkconfig -o /boot/grub/grub.cfg
+
+cd /opt
+git clone "$REPO_URL" MacArch
+chown -R "$USERNAME:$USERNAME" /opt/MacArch
+sudo -u "$USERNAME" bash -lc 'cd /opt/MacArch && ./scripts/install-macarch-common.sh'
+CHROOT
+
+echo
+echo "Installazione completata. Riavvia con: reboot"
