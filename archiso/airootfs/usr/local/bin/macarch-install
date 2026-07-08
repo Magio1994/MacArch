@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd /opt/macarch
+./scripts/install-macarch-common.sh
