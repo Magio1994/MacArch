@@ -17,8 +17,8 @@ plugin=org.kde.plasma.folder
 wallpaperplugin=org.kde.image
 
 [Containments][89][Wallpaper][org.kde.image][General]
-Image=file:///home/ale/.local/share/wallpapers/WhiteSur-light/
-SlidePaths=/home/ale/.local/share/wallpapers/,/usr/share/wallpapers/
+Image=file:///usr/share/wallpapers/WhiteSur-light/
+SlidePaths=/usr/share/wallpapers/
 
 [Containments][90]
 activityId=
