@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WORKDIR="${WORKDIR:-$HOME/.cache/macarch-sources}"
+TARGET_USER="${SUDO_USER:-$USER}"
+TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
+
+WORKDIR="${WORKDIR:-$TARGET_HOME/.cache/macarch-sources}"
+
 mkdir -p "$WORKDIR"
+
+chown -R "$TARGET_USER:$TARGET_USER" "$TARGET_HOME/.cache"
+
 cd "$WORKDIR"
 
 clone_checkout() {
