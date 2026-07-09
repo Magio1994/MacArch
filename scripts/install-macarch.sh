@@ -31,6 +31,9 @@ pacman -Syu --needed --noconfirm \
 systemctl enable NetworkManager
 systemctl enable sddm
 
+"$REPO_DIR/scripts/install-themes.sh"
+"$REPO_DIR/scripts/apply-common.sh"
+
 echo
 echo "Installazione base MacArch completata."
 echo "Prossimo passo: applicare temi e configurazioni."
