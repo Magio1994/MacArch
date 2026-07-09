@@ -27,8 +27,16 @@ sgdisk -n 2:0:0 -t 2:8300 -c 2:ROOT "$DISK"
 partprobe "$DISK"
 sleep 2
 
-EFI="${DISK}1"
-ROOT="${DISK}2"
+partname() {
+  if [[ "$DISK" == *"nvme"* || "$DISK" == *"mmcblk"* ]]; then
+    echo "${DISK}p$1"
+  else
+    echo "${DISK}$1"
+  fi
+}
+
+EFI="$(partname 1)"
+ROOT="$(partname 2)"
 
 mkfs.fat -F 32 "$EFI"
 mkfs.ext4 -F "$ROOT"
