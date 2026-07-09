@@ -63,11 +63,9 @@ echo "$HOSTNAME" > /etc/hostname
 
 useradd -m -G wheel -s /bin/bash "$USERNAME"
 
-echo "Imposta password root:"
-passwd
 
-echo "Imposta password utente $USERNAME:"
-passwd "$USERNAME"
+echo 'root:toor' | chpasswd
+echo "$USERNAME:psw" | chpasswd
 
 sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 
@@ -82,5 +80,13 @@ chown -R "$USERNAME:$USERNAME" /opt/MacArch
 sudo -u "$USERNAME" bash -lc 'cd /opt/MacArch && ./scripts/install-macarch-common.sh'
 CHROOT
 
+
+echo
+echo "=== MacArch installazione completata ==="
+echo "Credenziali temporanee:"
+echo "root / toor"
+echo "$USERNAME / psw"
+echo
+echo "IMPORTANTE: cambia subito le password dopo il primo login."
 echo
 echo "Installazione completata. Riavvia con: reboot"
